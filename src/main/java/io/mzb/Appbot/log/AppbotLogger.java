@@ -108,13 +108,13 @@ public class AppbotLogger extends PrintStream {
     @Override
     public PrintStream printf(String format, Object... args) {
         handleOut(String.format(format, args));
-        return super.printf(format, args);
+        return this;
     }
 
     @Override
     public PrintStream printf(Locale l, String format, Object... args) {
         handleOut(String.format(format, args));
-        return super.printf(l, format, args);
+        return this;
     }
 
     private void handleOut(Object print) {

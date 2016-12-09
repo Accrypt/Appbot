@@ -28,7 +28,7 @@ public class IRCHandler {
         if(sendQueue.containsKey(channel)) {
             sendQueue.get(channel).add(message);
         } else {
-            sendQueue.put(channel, new ArrayList<String>());
+            sendQueue.put(channel, new ArrayList<>());
             sendQueue.get(channel).add(message);
         }
     }

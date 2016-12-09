@@ -1,6 +1,11 @@
 package io.mzb.Appbot.twitch;
 
 import io.mzb.Appbot.Appbot;
+import io.mzb.Appbot.commands.CommandHandler;
+import io.mzb.Appbot.events.events.ChannelJoinEvent;
+import io.mzb.Appbot.events.events.ChannelPartEvent;
+import io.mzb.Appbot.events.events.MessageEvent;
+import io.mzb.Appbot.events.events.UserModeEvent;
 import io.mzb.Appbot.twitch.util.TwitchAPI;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -18,7 +23,7 @@ public class Channel {
     private boolean loaded = false, valid = true, mature, partner;
     private HashMap<String, User> chatters = new HashMap<>();
     private int viewCount, totalViews, followers, id;
-    private String status, name, broadcast_lang, game, language, logoUrl, videoBannerUrl, profileBannerUrl, streamUrl;
+    private String invalidReason, status, name, broadcast_lang, game, language, logoUrl, videoBannerUrl, profileBannerUrl, streamUrl;
     private ArrayList<Team> teams;
 
     public Channel(String name) {
@@ -46,12 +51,13 @@ public class Channel {
             JSONObject channelJson = TwitchAPI.CHANNEL.get(name);
             if (channelJson == null) {
                 valid = false;
-                System.out.println("Channel json is null!");
+                invalidReason = "Channel json was null";
             } else if (channelJson.containsKey("error")) {
                 valid = false;
-                System.out.println("Channel json contains error!");
+                invalidReason = "Channel json contains error: " + channelJson.get("error").toString();
             } else {
                 valid = true;
+                invalidReason = "Channel is valid";
                 this.game = jsonGet(channelJson, "game");
                 this.mature = Boolean.valueOf(jsonGet(channelJson, "mature"));
                 this.videoBannerUrl = jsonGet(channelJson, "video_banner");
@@ -211,6 +217,10 @@ public class Channel {
         return valid;
     }
 
+    public String getInvalidReason() {
+        return invalidReason;
+    }
+
     public boolean isMature() {
         return mature;
     }
@@ -289,6 +299,9 @@ public class Channel {
     }
 
     public void chat(String message) {
+        if(Appbot.getIrcHandler() == null || getName() == null || message == null) {
+            return;
+        }
         Appbot.getIrcHandler().send(getName(), "PRIVMSG #" + getName().toLowerCase() + " :" + message);
     }
 
@@ -297,11 +310,12 @@ public class Channel {
             if (chatters.containsKey(name)) {
                 chatters.get(name).setLocalRank(LocalRank.OWNER);
                 System.out.printf("[%s] Mode - Name: [%s] Rank[%s]", getName(), name, LocalRank.OWNER.getDisplayName());
+                Appbot.getEventManager().callEvent(new UserModeEvent(this, chatters.get(name), LocalRank.OWNER));
             } else {
-                User user = new User(name, getName());
-                user.setLocalRank(LocalRank.OWNER);
-                chatters.put(name, user);
+                onUserJoin(name);
+                chatters.get(name).setLocalRank(LocalRank.OWNER);
                 System.out.printf("[%s] Mode - Name: [%s] Rank[%s]", getName(), name, LocalRank.OWNER.getDisplayName());
+                Appbot.getEventManager().callEvent(new UserModeEvent(this, chatters.get(name), LocalRank.OWNER));
             }
             return;
         }
@@ -309,35 +323,51 @@ public class Channel {
             if (user.getName().equalsIgnoreCase(name)) {
                 user.setLocalRank((mod ? LocalRank.MOD : LocalRank.USER));
                 System.out.printf("[%s] Mode - Name: [%s] Rank[%s]", getName(), name, (mod ? LocalRank.MOD : LocalRank.USER).getDisplayName());
+                Appbot.getEventManager().callEvent(new UserModeEvent(this, chatters.get(name), user.getLocalRank()));
                 return;
             }
         }
         User user = new User(name, getName());
         user.setLocalRank((mod ? LocalRank.MOD : LocalRank.USER));
         System.out.printf("[%s] Mode - Name: [%s] Rank[%s]", getName(), name, (mod ? LocalRank.MOD : LocalRank.USER).getDisplayName());
+        Appbot.getEventManager().callEvent(new UserModeEvent(this, chatters.get(name), user.getLocalRank()));
     }
 
     public void onUserJoin(String name) {
         if (!chatters.keySet().contains(name)) {
             chatters.put(name, new User(name, getName()));
             System.out.printf("[%s] Join - Name: [%s]", getName(), name);
+            Appbot.getEventManager().callEvent(new ChannelJoinEvent(this, chatters.get(name)));
         }
     }
 
     public void onUserQuit(String name) {
         if (chatters.keySet().contains(name)) {
+            System.out.println(String.format("[%s] Part - Name: [%s]", getName(), name));
+            Appbot.getEventManager().callEvent(new ChannelPartEvent(this, chatters.get(name)));
             chatters.remove(name);
-            System.out.printf("[%s] Part - Name: [%s]", getName(), name);
         }
     }
 
     public void onMessage(String name, String message) {
-        if (message.startsWith("!")) {
-            // Command
-        } else {
-            // Message
+        if(!chatters.containsKey(name)) {
+            onUserJoin(name);
         }
-        System.out.printf("[%s] Msg - Name: [%s] Message: [%s]", getName(), name, message);
+        if (message.startsWith("!")) {
+            System.out.println(String.format("[%s] Cmd - Name: [%s] Command: [%s]", getName(), name, message));
+            String command = message.split(" ")[0];
+            message = message.replaceFirst(command, "").trim();
+            command = command.substring(1, command.length());
+            System.out.println("Message before arg split: " + message);
+            String[] args = (message.equalsIgnoreCase(" ") ? new String[0] : message.split(" "));
+            CommandHandler handler = Appbot.getCommandManager().getCommandHandler(command);
+            if(handler != null) {
+                handler.onCommand(this, chatters.get(name), command, args);
+            }
+        } else {
+            System.out.println(String.format("[%s] Msg - Name: [%s] Message: [%s]", getName(), name, message));
+            Appbot.getEventManager().callEvent(new MessageEvent(this, chatters.get(name), message));
+        }
     }
 
 }

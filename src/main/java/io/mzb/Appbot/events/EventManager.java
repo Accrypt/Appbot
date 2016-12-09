@@ -9,6 +9,7 @@ public class EventManager {
     private ArrayList<EventListener> listeners = new ArrayList<>();
 
     public void addListener(EventListener listener) {
+        System.out.println("[Event] Registered: " + listener.getClass().getName());
         listeners.add(listener);
     }
 
@@ -17,23 +18,20 @@ public class EventManager {
     }
 
     public void callEvent(Event event) {
-        ArrayList<Method> eventMethods = new ArrayList<>();
-        for(EventListener listener : listeners) {
-            for(Method method : listener.getClass().getMethods()) {
-                if(method.isAnnotationPresent(EventHandler.class)) {
-                    eventMethods.add(method);
+        System.out.println("[Event] Calling: " + event.getClass().getSimpleName());
+        for (EventListener listener : listeners) {
+            for (Method method : listener.getClass().getMethods()) {
+                if (method.isAnnotationPresent(EventHandler.class)) {
+                    try {
+                        System.out.println("[Event] Invoke: " + method.getName() + " in " + listener.getClass().getSimpleName());
+                        method.invoke(listener, event);
+                    } catch (IllegalAccessException e) {
+                        e.printStackTrace();
+                    } catch (InvocationTargetException e) {
+                        e.printStackTrace();
+                    }
                 }
             }
         }
-        for(Method method : eventMethods) {
-            try {
-                method.invoke(event);
-            } catch (IllegalAccessException e) {
-                e.printStackTrace();
-            } catch (InvocationTargetException e) {
-                e.printStackTrace();
-            }
-        }
     }
-
 }

@@ -1,10 +1,11 @@
 package io.mzb.Appbot;
 
+import io.mzb.Appbot.commands.CommandManager;
+import io.mzb.Appbot.commands.test.HelloWorldCommand;
 import io.mzb.Appbot.events.EventListener;
 import io.mzb.Appbot.events.EventManager;
 import io.mzb.Appbot.log.AppbotLogger;
 import io.mzb.Appbot.plugin.PluginManager;
-import io.mzb.Appbot.test.EventTest;
 import io.mzb.Appbot.threads.TaskManager;
 import io.mzb.Appbot.twitch.Channel;
 import io.mzb.Appbot.twitch.irc.IRCHandler;
@@ -42,6 +43,7 @@ public class Appbot extends EventListener {
     private static PluginManager pluginManager;
     private static IRCHandler ircHandler;
     private static EventManager eventManager;
+    private static CommandManager commandManager;
 
     public Appbot() throws IOException, InterruptedException, ParseException {
         // Setup logger
@@ -50,12 +52,11 @@ public class Appbot extends EventListener {
         System.setErr(logger);
         // Task manager init
 
-        System.out.println("Starting appbot version beta-1");
+        System.out.println("Starting Appbot version beta-1");
 
         taskManager = new TaskManager();
         eventManager = new EventManager();
-
-        eventManager.addListener(this);
+        commandManager = new CommandManager();
 
         // Setup plugin folder
         if (!getPluginsFolder().exists()) {
@@ -116,7 +117,7 @@ public class Appbot extends EventListener {
             return;
         }
 
-        this.CHANNEL = new Channel(connection.get("channel").toString(), () -> {
+        this.CHANNEL = new Channel(connection.get("channel").toString().toLowerCase(), () -> {
             if (CHANNEL.isValid()) {
                 // Plugin - only loaded if channel is valid!
                 pluginManager = new PluginManager(getPluginsFolder());
@@ -128,15 +129,17 @@ public class Appbot extends EventListener {
                 ircHandler.connect();
                 ircHandler.sendAuth();
                 CHANNEL.joinIrc();
+
+                commandManager.registerCommand("hello", new HelloWorldCommand());
             } else {
-                System.out.println("Default channel is invalid! Please check that you have typed it correctly!");
+                System.out.println("Default channel is invalid: " + CHANNEL.getInvalidReason());
+                System.out.println("Please make sure that you have typed the channel name correctly!");
+                System.exit(1);
             }
         });
 
         Appbot.getTaskManager().runTask(() -> {
             CHANNEL.chat("Testing!");
-
-            new EventTest().setup();
         }, 1000 * 10);
     }
 
@@ -220,6 +223,10 @@ public class Appbot extends EventListener {
 
     public static IRCHandler getIrcHandler() {
         return ircHandler;
+    }
+
+    public static CommandManager getCommandManager() {
+        return commandManager;
     }
 
 }
