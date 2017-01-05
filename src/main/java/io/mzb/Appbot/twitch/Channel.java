@@ -16,8 +16,10 @@ import java.util.HashMap;
 
 public class Channel {
 
+    // Holds all connected channels (name -> channel)
     private static HashMap<String, Channel> channelKeep = new HashMap<>();
 
+    // Task id of the update thread
     private int updateTaskId = -1;
 
     private boolean loaded = false, valid = true, mature, partner;
@@ -26,6 +28,10 @@ public class Channel {
     private String invalidReason, status, name, broadcast_lang, game, language, logoUrl, videoBannerUrl, profileBannerUrl, streamUrl;
     private ArrayList<Team> teams;
 
+    /**
+     * Channel init
+     * @param name The name of the channel
+     */
     public Channel(String name) {
         this.name = name;
         load(null);
@@ -136,7 +142,7 @@ public class Channel {
     }
 
     private ArrayList<String> updateLocal(JSONArray names, LocalRank rank) {
-        ArrayList<String> allNames = new ArrayList<String>();
+        ArrayList<String> allNames = new ArrayList<>();
         if (names == null) {
             return allNames;
         }
@@ -165,7 +171,7 @@ public class Channel {
     }
 
     private ArrayList<String> updateGlobal(JSONArray names, GlobalRank rank) {
-        ArrayList<String> allNames = new ArrayList<String>();
+        ArrayList<String> allNames = new ArrayList<>();
         if (names == null) {
             return allNames;
         }
@@ -201,7 +207,7 @@ public class Channel {
         }
     }
 
-    public void onUserEnterChat(User user) {
+    private void onUserEnterChat(User user) {
         System.out.printf("[User] Type: [Join] Name: [%s] Channel[%s] Rank: [%s]", user.getName(), getName(), user.getLocalRank().getDisplayName());
     }
 
@@ -229,7 +235,7 @@ public class Channel {
         return partner;
     }
 
-    public Collection<User> getChatters() {
+    private Collection<User> getChatters() {
         return chatters.values();
     }
 

@@ -14,29 +14,32 @@ import java.util.HashMap;
 
 public class PluginManager {
 
-    static HashMap<String, AppbotPlugin> activePlugins = new HashMap<String, AppbotPlugin>();
-    File pluginDir;
+    // List of all plugins running, stored by their name
+    private static HashMap<String, AppbotPlugin> activePlugins = new HashMap<>();
+    // The location of the plugin folder
+    private File pluginDir;
 
+    /**
+     * Plugin manager init
+     * @param pluginDir The location to load the plugins from
+     */
     public PluginManager(File pluginDir) {
         this.pluginDir = pluginDir;
-
-        for (File file : pluginDir.listFiles()) {
+        if(this.pluginDir == null) {
+            System.out.println("[Error] Plugin directory is null!");
+            System.exit(1);
+        }
+        File[] files = this.pluginDir.listFiles();
+        if(files == null) {
+            System.out.println("[Error] Plugin directory list is null!");
+            System.exit(1);
+        }
+        for (File file : files) {
+            // Only load jar files
             if (file.getName().endsWith(".jar")) {
                 try {
                     loadPlugin(file);
-                } catch (IOException e) {
-                    System.err.println("Failed to load plugin " + file.getName());
-                    e.printStackTrace();
-                } catch (ClassNotFoundException e) {
-                    System.err.println("Failed to load plugin " + file.getName());
-                    e.printStackTrace();
-                } catch (IllegalAccessException e) {
-                    System.err.println("Failed to load plugin " + file.getName());
-                    e.printStackTrace();
-                } catch (InstantiationException e) {
-                    System.err.println("Failed to load plugin " + file.getName());
-                    e.printStackTrace();
-                } catch (ParseException e) {
+                } catch (IOException | ClassNotFoundException | IllegalAccessException | ParseException | InstantiationException e) {
                     System.err.println("Failed to load plugin " + file.getName());
                     e.printStackTrace();
                 }
@@ -44,6 +47,15 @@ public class PluginManager {
         }
     }
 
+    /**
+     * Loads a plugin from its file
+     * @param file The file of the plugin
+     * @throws IOException Failed to read the file
+     * @throws ClassNotFoundException The main class is not found
+     * @throws IllegalAccessException Can't gain access to the fail (Check user permissions)
+     * @throws InstantiationException x
+     * @throws ParseException x
+     */
     private void loadPlugin(File file) throws IOException, ClassNotFoundException, IllegalAccessException, InstantiationException, ParseException {
         String name = file.getName();
 
@@ -58,4 +70,14 @@ public class PluginManager {
         activePlugins.put(pluginJson.get("name").toString(), plugin);
         System.out.println("Loaded plugin " + pluginJson.get("name").toString());
     }
+
+    public String getPluginName(AppbotPlugin plugin) {
+        for(String key : activePlugins.keySet()) {
+            if(activePlugins.get(key).equals(plugin)) {
+                return key;
+            }
+        }
+        return null;
+    }
+
 }

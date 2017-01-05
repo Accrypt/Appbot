@@ -5,7 +5,8 @@ import org.json.simple.JSONObject;
 public enum TwitchAPI {
 
     CHANNEL("https://api.twitch.tv/kraken/channels/%s"),
-    FOLLOWS("https://api.twitch.tv/kraken/channels/%s/follows");
+    FOLLOWS("https://api.twitch.tv/kraken/channels/%s/follows"),
+    USER("https://api.twitch.tv/kraken/users/%s");
 
     private String directory;
 

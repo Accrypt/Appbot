@@ -4,7 +4,9 @@ import java.util.ArrayList;
 
 public class Team {
 
+    // The name of the team
     private String name;
+    // List of channels in the team
     private ArrayList<String> channels;
 
     public Team(String name) {

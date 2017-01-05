@@ -2,39 +2,61 @@ package io.mzb.Appbot.threads;
 
 public class AppbotTask implements Runnable {
 
+    // Total number of tasks running/have been ran
     private static int currentCount = 0;
 
+    // Id of task instance
     private int id;
 
+    // Thread task is running on
     private Thread thread;
+    // The delay to start with
     private long delay;
+    // How long to wait between loops
     private long repeat;
+    // The runnable to execute each loop
     private Runnable exc;
+    // Should the task be killed
     private boolean kill = false;
 
-    public AppbotTask(Runnable exc) {
+    /**
+     * Start a simple thread, no delay, no loop
+     * @param exc Runnable to be executed in a new thread
+     */
+    AppbotTask(Runnable exc) {
         thread = new Thread(this, "Appbot-Thread " + currentCount);
         this.id = currentCount;
         currentCount++;
         this.exc = exc;
-        this.delay = 0l;
-        this.repeat = -1l;
+        this.delay = 0L;
+        this.repeat = -1L;
 
         thread.start();
     }
 
-    public AppbotTask(Runnable exc, long delay) {
+    /**
+     * Simple thread with a delay, but no loop
+     * @param exc Runnable to be executed after the delay
+     * @param delay How long to wait before executing
+     */
+    AppbotTask(Runnable exc, long delay) {
         thread = new Thread(this, "Appbot-DelayThread " + currentCount);
         this.id = currentCount;
         currentCount++;
         this.exc = exc;
         this.delay = delay;
-        this.repeat = -1l;
+        this.repeat = -1L;
 
         thread.start();
     }
 
-    public AppbotTask(Runnable exc, long delay, long repeat) {
+    /**
+     * Simple task with a delay and loop
+     * @param exc Runnable to be executed after the initial delay and then repeat after the delay of repeat
+     * @param delay Initial delay to wait before starting the loop
+     * @param repeat Runnable is ran forever with this delay
+     */
+    AppbotTask(Runnable exc, long delay, long repeat) {
         thread = new Thread(this, "Appbot-RepeatThread " + currentCount);
         this.id = currentCount;
         currentCount++;
@@ -45,27 +67,36 @@ public class AppbotTask implements Runnable {
         thread.start();
     }
 
-    public int getId() {
+    /**
+     * @return The current task id
+     */
+    int getId() {
         return id;
     }
 
-    public void kill() {
+    /**
+     * Kills the current task
+     */
+    void kill() {
         kill = true;
         try {
             thread.join();
         } catch (InterruptedException e) {
             e.printStackTrace();
-            thread.stop();
+            System.out.println("Failed to join and kill thread " + thread.getName());
         }
     }
 
+    /**
+     * Runs the task
+     */
     public void run() {
         try {
-            thread.sleep(delay);
+            Thread.sleep(delay);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        if(repeat > 0l) {
+        if(repeat > 0L) {
             while(true) {
                 if(kill) {
                     break;
@@ -74,7 +105,7 @@ public class AppbotTask implements Runnable {
                 exc.run();
 
                 try {
-                    thread.sleep(repeat);
+                    Thread.sleep(repeat);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }

@@ -5,7 +5,11 @@ import java.io.PrintStream;
 
 public class IrcOut extends PrintStream {
 
-    public IrcOut(OutputStream out) {
+    /*
+    This class just overrides everything from the print stream and then prints it to the console
+     */
+
+    IrcOut(OutputStream out) {
         super(out);
     }
 
@@ -69,6 +73,11 @@ public class IrcOut extends PrintStream {
         printOut(x);
     }
 
+    /**
+     * Prints the message to the console
+     * Resets thread name to "IRC-O" (Irc Output)
+     * @param x The message to print, can be any kind of object, converts to string
+     */
     private void printOut(Object x) {
         Thread.currentThread().setName("IRC-O");
         System.out.println("[IRC] -> " + x.toString());

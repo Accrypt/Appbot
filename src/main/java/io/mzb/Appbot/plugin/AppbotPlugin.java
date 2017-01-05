@@ -2,8 +2,14 @@ package io.mzb.Appbot.plugin;
 
 public interface AppbotPlugin {
 
-    public void onLoad();
+    /**
+     * Called to load a plugin
+     */
+    void onLoad();
 
-    public void onUnload();
+    /**
+     * Called to unload a plugin
+     */
+    void onUnload();
 
 }

@@ -8,8 +8,19 @@ import java.util.Locale;
 
 public class AppbotLogger extends PrintStream {
 
+    /*
+    This class just overrides the print stream
+    so make all console output also get printed to a file
+     */
+
     private PrintStream console;
 
+    /**
+     * Logger init
+     * @param printStream The file print stream for the log
+     * @param console The print stream for the console
+     * @throws FileNotFoundException The log file is not found, should be created first!
+     */
     public AppbotLogger(PrintStream printStream, PrintStream console) throws FileNotFoundException {
         super(printStream);
         this.console = console;
@@ -117,10 +128,18 @@ public class AppbotLogger extends PrintStream {
         return this;
     }
 
+    /**
+     * Handles the output to the console and the file
+     * Inserts the correct time and thread the message was sent from
+     * @param print Object to be printed
+     */
     private void handleOut(Object print) {
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        // [Current Date] [Thread Name] Log Information
         String current = String.format("[%s] [%s] %s", sdf.format(new Date()), Thread.currentThread().getName(), print.toString());
+        // Print to file
         super.println(current);
+        // Print to console
         console.println(current);
     }
 
