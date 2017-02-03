@@ -93,6 +93,7 @@ public class User {
      */
     private void loadData(Runnable loadCallback) {
         Appbot.getTaskManager().runTask(() -> {
+            System.out.println("Loading user data for " + getName() + " in " + channel);
             JSONObject user = TwitchAPI.USER.get(name);
 
             if(user != null) {
@@ -128,7 +129,7 @@ public class User {
     /**
      * @return The local rank the user contains in the channel they are assigned to
      */
-    LocalRank getLocalRank() {
+    public LocalRank getLocalRank() {
         return localRank;
     }
 
@@ -146,7 +147,7 @@ public class User {
      * TODO: Update this list, currently returns empty list
      * @return List of all global ranks the user has (Staff, Turbo, etc.)
      */
-    ArrayList<GlobalRank> getGlobalRanks() {
+    public ArrayList<GlobalRank> getGlobalRanks() {
         return globalRanks;
     }
 

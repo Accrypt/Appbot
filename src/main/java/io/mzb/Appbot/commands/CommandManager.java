@@ -24,7 +24,7 @@ public class CommandManager {
      * @param command The name of the command to register
      * @param handler The command handler that will handle that command
      */
-    private void registerCommand(AppbotPlugin plugin, String command, CommandHandler handler) {
+    public void registerCommand(AppbotPlugin plugin, String command, CommandHandler handler) {
         if(plugin == null) {
             System.out.println("[Command] Error: Plugin can not be null!");
         }

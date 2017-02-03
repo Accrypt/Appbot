@@ -1,6 +1,5 @@
 package io.mzb.Appbot.twitch.util;
 
-import com.sun.istack.internal.NotNull;
 import io.mzb.Appbot.Appbot;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -42,7 +41,7 @@ class JsonUtil {
      * @return String of content of the website
      * @throws IOException Failed to read website
      */
-    private static String urlToString(@NotNull String urlString) throws IOException {
+    private static String urlToString(String urlString) throws IOException {
         // Check if being ran on main thread
         checkMainThread();
         StringBuilder response;

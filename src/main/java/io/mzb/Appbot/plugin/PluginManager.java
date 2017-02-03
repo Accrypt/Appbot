@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.util.Collection;
 import java.util.HashMap;
 
 public class PluginManager {
@@ -64,13 +65,18 @@ public class PluginManager {
         String pluginString = IOUtils.toString(is, "UTF-8");
         JSONParser jp = new JSONParser();
         JSONObject pluginJson = (JSONObject) jp.parse(pluginString);
-        String mainDir = pluginJson.get("main").toString(); // TODO
+        String mainDir = pluginJson.get("main").toString();
         AppbotPlugin plugin = (AppbotPlugin) loader.loadClass(mainDir).newInstance();
         plugin.onLoad();
         activePlugins.put(pluginJson.get("name").toString(), plugin);
         System.out.println("Loaded plugin " + pluginJson.get("name").toString());
     }
 
+    /**
+     * Returns the name of a plugin from its plugin class
+     * @param plugin The plugin to find the name of
+     * @return The name of the plugin
+     */
     public String getPluginName(AppbotPlugin plugin) {
         for(String key : activePlugins.keySet()) {
             if(activePlugins.get(key).equals(plugin)) {
@@ -78,6 +84,14 @@ public class PluginManager {
             }
         }
         return null;
+    }
+
+    /**
+     *
+     * @return Returns a collection of all active plugins running
+     */
+    public Collection<AppbotPlugin> getActivePlugins() {
+        return activePlugins.values();
     }
 
 }

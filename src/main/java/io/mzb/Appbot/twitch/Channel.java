@@ -30,6 +30,7 @@ public class Channel {
 
     /**
      * Channel init
+     *
      * @param name The name of the channel
      */
     public Channel(String name) {
@@ -305,7 +306,7 @@ public class Channel {
     }
 
     public void chat(String message) {
-        if(Appbot.getIrcHandler() == null || getName() == null || message == null) {
+        if (Appbot.getIrcHandler() == null || getName() == null || message == null) {
             return;
         }
         Appbot.getIrcHandler().send(getName(), "PRIVMSG #" + getName().toLowerCase() + " :" + message);
@@ -356,7 +357,7 @@ public class Channel {
     }
 
     public void onMessage(String name, String message) {
-        if(!chatters.containsKey(name)) {
+        if (!chatters.containsKey(name)) {
             onUserJoin(name);
         }
         if (message.startsWith("!")) {
@@ -367,8 +368,14 @@ public class Channel {
             System.out.println("Message before arg split: " + message);
             String[] args = (message.equalsIgnoreCase(" ") ? new String[0] : message.split(" "));
             CommandHandler handler = Appbot.getCommandManager().getCommandHandler(command);
-            if(handler != null) {
-                handler.onCommand(this, chatters.get(name), command, args);
+            if (handler != null) {
+                User user = chatters.get(name);
+                if (!user.isLoaded()) {
+                    String finalCommand = command;
+                    user.reload(() -> handler.onCommand(Channel.this, user, finalCommand, args));
+                } else {
+                    handler.onCommand(this, chatters.get(name), command, args);
+                }
             }
         } else {
             System.out.println(String.format("[%s] Msg - Name: [%s] Message: [%s]", getName(), name, message));

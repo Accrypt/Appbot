@@ -77,6 +77,17 @@ public class IRCHandler {
     }
 
     /**
+     * Disconnects the socket, will cause all irc connections to be killed!
+     */
+    public void disconnect() {
+        try {
+            socket.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
      * Sends authentication information to the irc server
      */
     public void sendAuth() {

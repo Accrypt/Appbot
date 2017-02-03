@@ -5,6 +5,7 @@ import io.mzb.Appbot.events.EventListener;
 import io.mzb.Appbot.events.EventManager;
 import io.mzb.Appbot.log.AppbotLogger;
 import io.mzb.Appbot.plugin.PluginManager;
+import io.mzb.Appbot.threads.ShutdownThread;
 import io.mzb.Appbot.threads.TaskManager;
 import io.mzb.Appbot.twitch.Channel;
 import io.mzb.Appbot.twitch.irc.IRCHandler;
@@ -43,17 +44,21 @@ public class Appbot extends EventListener {
 
     public Appbot() throws IOException, InterruptedException, ParseException {
         System.out.println("Starting Appbot version " + VERSION);
+        System.out.println("Active location: " + getActiveLocation().toString());
+
+        Runtime.getRuntime().addShutdownHook(new ShutdownThread());
 
         setupLogger();
         setupPluginsFolder();
         setupSettingsFile();
+
+        taskManager = new TaskManager();
 
         loadSettings(() -> {
             if (CHANNEL.isValid()) {
                 System.out.println("Loading managers");
 
                 // Load only if a default channel is found and valid
-                taskManager = new TaskManager();
                 eventManager = new EventManager();
                 commandManager = new CommandManager();
 
@@ -187,7 +192,8 @@ public class Appbot extends EventListener {
         BOT_CLIENTID = auth.get("clientid").toString();
         // Get connection part of settings
         JSONObject connection = (JSONObject) settings.get("connect");
-        CHANNEL = new Channel(connection.get("channel").toString().toLowerCase(), runnable);
+        String channelName = connection.get("channel").toString().toLowerCase();
+        CHANNEL = new Channel(channelName, runnable);
     }
 
     /**
@@ -258,7 +264,14 @@ public class Appbot extends EventListener {
      */
     private File getActiveLocation() {
         try {
-            return new File(Appbot.class.getProtectionDomain().getCodeSource().getLocation().toURI().getPath());
+            File activeLocation = new File(Appbot.class.getProtectionDomain().getCodeSource().getLocation().toURI().getPath());
+            if(activeLocation.toString().endsWith(".jar")) {
+                int lastSeparator = activeLocation.toString().lastIndexOf(activeLocation.separator);
+                String execPath = activeLocation.toString().substring(0, lastSeparator);
+                return new File(execPath);
+            } else {
+                return activeLocation;
+            }
         } catch (URISyntaxException e) {
             e.printStackTrace();
         }
@@ -299,6 +312,7 @@ public class Appbot extends EventListener {
             try {
                 file.createNewFile();
             } catch (IOException e) {
+                System.out.println("Failed to create new log file! Stopping!");
                 e.printStackTrace();
                 System.exit(1);
             }
