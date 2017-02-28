@@ -22,11 +22,13 @@ public class Channel {
     // Task id of the update thread
     private int updateTaskId = -1;
 
-    private boolean loaded = false, valid = true, mature, partner;
+    private boolean loaded = false, valid = true, mature, partner, emoteOnly, r9k, subOnly;
     private HashMap<String, User> chatters = new HashMap<>();
-    private int viewCount, totalViews, followers, id;
+    private int viewCount, totalViews, followers, id, slow;
     private String invalidReason, status, name, broadcast_lang, game, language, logoUrl, videoBannerUrl, profileBannerUrl, streamUrl;
     private ArrayList<Team> teams;
+    // Unix time code for when follow only is enabled until
+    private long followerOnly;
 
     /**
      * Channel init
@@ -45,10 +47,23 @@ public class Channel {
         channelKeep.put(name.toLowerCase(), this);
     }
 
+    public static Collection<Channel> getConnectedChannels() {
+        return channelKeep.values();
+    }
+
     public static Channel getConnectedChannel(String name) {
         if (channelKeep.keySet().contains(name.toLowerCase())) {
             return channelKeep.get(name.toLowerCase());
         } else {
+            return null;
+        }
+    }
+
+    public static Channel getFirstChannel() {
+        if(channelKeep.keySet().size() > 0) {
+            return channelKeep.get(0);
+        } else {
+            System.out.println("Error?! No channels found in the channel keep!");
             return null;
         }
     }
@@ -236,8 +251,23 @@ public class Channel {
         return partner;
     }
 
-    private Collection<User> getChatters() {
+    public Collection<User> getChatters() {
         return chatters.values();
+    }
+
+    public boolean hasChatter(String name) {
+        return chatters.containsKey(name);
+    }
+
+    public User getChatter(String name) {
+        if(hasChatter(name)) {
+            System.out.println("Have chatter!");
+            return chatters.get(name);
+        } else {
+            System.out.println("No have user, make da user");
+            onUserJoin(name);
+            return chatters.get(name);
+        }
     }
 
     public int getViewCount() {
@@ -263,11 +293,6 @@ public class Channel {
     public String getName() {
         return name;
     }
-
-    public String getBroadcastLang() {
-        return broadcast_lang;
-    }
-
 
     public String getGame() {
         return game;
@@ -295,6 +320,54 @@ public class Channel {
 
     public ArrayList<Team> getTeams() {
         return teams;
+    }
+
+    public boolean isEmoteOnly() {
+        return emoteOnly;
+    }
+
+    public void setEmoteOnly(boolean emoteOnly) {
+        this.emoteOnly = emoteOnly;
+    }
+
+    public long getFollowerOnlyExpireTime() {
+        return followerOnly;
+    }
+
+    public void setFollowerOnlyExpireTime(long followerOnly) {
+        this.followerOnly = followerOnly;
+    }
+
+    public boolean isR9k() {
+        return r9k;
+    }
+
+    public void setR9k(boolean r9k) {
+        this.r9k = r9k;
+    }
+
+    public boolean isSubOnly() {
+        return subOnly;
+    }
+
+    public void setSubOnly(boolean subOnly) {
+        this.subOnly = subOnly;
+    }
+
+    public int getSlow() {
+        return slow;
+    }
+
+    public void setSlow(int slow) {
+        this.slow = slow;
+    }
+
+    public String getBroadcastLang() {
+        return broadcast_lang;
+    }
+
+    public void setBroadcastLang(String broadcast_lang) {
+        this.broadcast_lang = broadcast_lang;
     }
 
     public void joinIrc() {
@@ -356,9 +429,11 @@ public class Channel {
         }
     }
 
-    public void onMessage(String name, String message) {
-        if (!chatters.containsKey(name)) {
-            onUserJoin(name);
+    public void onMessage(User user, String message, String emotes, int bits) {
+        if (!chatters.containsKey(user.getName())) {
+            chatters.put(user.getName(), user);
+            System.out.printf("[%s] Join - Name: [%s]", getName(), name);
+            Appbot.getEventManager().callEvent(new ChannelJoinEvent(this, chatters.get(name)));
         }
         if (message.startsWith("!")) {
             System.out.println(String.format("[%s] Cmd - Name: [%s] Command: [%s]", getName(), name, message));
@@ -369,7 +444,6 @@ public class Channel {
             String[] args = (message.equalsIgnoreCase(" ") ? new String[0] : message.split(" "));
             CommandHandler handler = Appbot.getCommandManager().getCommandHandler(command);
             if (handler != null) {
-                User user = chatters.get(name);
                 if (!user.isLoaded()) {
                     String finalCommand = command;
                     user.reload(() -> handler.onCommand(Channel.this, user, finalCommand, args));
@@ -378,8 +452,8 @@ public class Channel {
                 }
             }
         } else {
-            System.out.println(String.format("[%s] Msg - Name: [%s] Message: [%s]", getName(), name, message));
-            Appbot.getEventManager().callEvent(new MessageEvent(this, chatters.get(name), message));
+            System.out.println(String.format("[%s] Msg - Name: [%s] Message: [%s] Emotes: [%s] Bits: [%d]", getName(), name, message, emotes, bits));
+            Appbot.getEventManager().callEvent(new MessageEvent(this, chatters.get(name), message, emotes, bits));
         }
     }
 

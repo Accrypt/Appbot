@@ -80,6 +80,9 @@ public class IRCHandler {
      * Disconnects the socket, will cause all irc connections to be killed!
      */
     public void disconnect() {
+        if(socket == null) {
+            return;
+        }
         try {
             socket.close();
         } catch (IOException e) {
@@ -93,6 +96,8 @@ public class IRCHandler {
     public void sendAuth() {
         send(Appbot.getDefaultChannel().getName(), "PASS " + Appbot.getOAuthToken());
         send(Appbot.getDefaultChannel().getName(), "NICK " + Appbot.getName());
+        send(Appbot.getDefaultChannel().getName(), "CAP REQ :twitch.tv/tags");
+        send(Appbot.getDefaultChannel().getName(), "CAP REQ :twitch.tv/commands");
     }
 
 }

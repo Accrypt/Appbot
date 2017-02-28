@@ -89,6 +89,8 @@ public class Appbot extends EventListener {
                 System.exit(1);
             }
         });
+
+        taskManager.initMainThreadQueue();
     }
 
     /**
