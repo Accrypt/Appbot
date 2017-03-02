@@ -22,13 +22,14 @@ public class Channel {
     // Task id of the update thread
     private int updateTaskId = -1;
 
-    private boolean loaded = false, valid = true, mature, partner, emoteOnly, r9k, subOnly;
+    private boolean loaded = false, valid = true, mature, partner, emoteOnly, r9k, subOnly, online = false, playlist;
     private HashMap<String, User> chatters = new HashMap<>();
-    private int viewCount, totalViews, followers, id, slow;
-    private String invalidReason, status, name, broadcast_lang, game, language, logoUrl, videoBannerUrl, profileBannerUrl, streamUrl;
+    private int slow, delay, videoHeight;
+    private String invalidReason, status, name, broadcast_lang, language, logoUrl, videoBannerUrl, profileBannerUrl, streamUrl, game, liveCreateTime;
     private ArrayList<Team> teams;
     // Unix time code for when follow only is enabled until
-    private long followerOnly;
+    private long followerOnly, viewers, id, viewCount, totalViews, followers;
+    private double avrFps;
 
     /**
      * Channel init
@@ -39,12 +40,16 @@ public class Channel {
         this.name = name;
         load(null);
         channelKeep.put(name.toLowerCase(), this);
+
+        enableUpdateTask();
     }
 
     public Channel(String name, Runnable loadCallback) {
         this.name = name;
         load(loadCallback);
         channelKeep.put(name.toLowerCase(), this);
+
+        enableUpdateTask();
     }
 
     public static Collection<Channel> getConnectedChannels() {
@@ -120,6 +125,9 @@ public class Channel {
     private void startUpdateTask() {
         this.updateTaskId = Appbot.getTaskManager().runTask(() -> {
 
+            /* TODO: Add this again to remove users that are not no longer present in channel to save memory
+             Include an inital creation time for the user so they don't get removed if they were added to
+             the user list from a chat message but are not showing on this api yet. */
             /*JSONObject chat = TwitchAPI.CHATTERS.get(name);
             if (chat == null) {
                 System.err.println("Error: Channel update task failed to get chatter json!");
@@ -133,16 +141,6 @@ public class Channel {
             JSONArray global_mods = (JSONArray) chatter.get("global_mods");
             JSONArray viewers = (JSONArray) chatter.get("viewers");
 
-            // Update ranks
-            allNames.addAll(updateLocal(mods, LocalRank.MOD));
-            allNames.addAll(updateLocal(staff, LocalRank.MOD));
-            allNames.addAll(updateLocal(admins, LocalRank.MOD));
-            allNames.addAll(updateLocal(global_mods, LocalRank.MOD));
-            allNames.addAll(updateLocal(viewers, LocalRank.USER));
-            allNames.addAll(updateGlobal(staff, GlobalRank.TWITCH_STAFF));
-            allNames.addAll(updateGlobal(admins, GlobalRank.ADMIN));
-            allNames.addAll(updateGlobal(global_mods, GlobalRank.GLOBAL_MOD));
-
             // Remove old users
             ArrayList<String> remove = new ArrayList<>();
             for (String key : chatters.keySet()) {
@@ -153,7 +151,29 @@ public class Channel {
             for (String rm : remove) {
                 onUserLeaveChat(chatters.get(rm));
                 chatters.remove(rm);
-            }*/
+            }
+            */
+
+            JSONObject stream = TwitchAPI.STREAM.get(getName());
+            if(stream == null || stream.get("stream") == null) {
+                online = false;
+                liveCreateTime = null;
+                viewers = 0;
+                avrFps = 0.0D;
+                delay = 0;
+                videoHeight = 0;
+                return;
+            } else {
+                JSONObject streamInfo = (JSONObject) stream.get("stream");
+                game = streamInfo.get("game").toString();
+                viewers = Integer.parseInt(streamInfo.get("viewers").toString());
+                avrFps = Double.parseDouble(streamInfo.get("average_fps").toString());
+                delay = Integer.parseInt(streamInfo.get("delay").toString());
+                videoHeight = Integer.parseInt(streamInfo.get("video_height").toString());
+                playlist = Boolean.parseBoolean(streamInfo.get("is_playlist").toString());
+                liveCreateTime = streamInfo.get("created_at").toString();
+            }
+
         }, 0, 1000 * 20);
     }
 
@@ -270,19 +290,19 @@ public class Channel {
         }
     }
 
-    public int getViewCount() {
+    public long getViewCount() {
         return viewCount;
     }
 
-    public int getTotalViews() {
+    public long getTotalViews() {
         return totalViews;
     }
 
-    public int getFollowers() {
+    public long getFollowers() {
         return followers;
     }
 
-    public int getId() {
+    public long getId() {
         return id;
     }
 
@@ -368,6 +388,30 @@ public class Channel {
 
     public void setBroadcastLang(String broadcast_lang) {
         this.broadcast_lang = broadcast_lang;
+    }
+
+    public boolean isOnline() {
+        return online;
+    }
+
+    public boolean isPlaylist() {
+        return playlist;
+    }
+
+    public int getDelay() {
+        return delay;
+    }
+
+    public int getVideoHeight() {
+        return videoHeight;
+    }
+
+    public String getLiveCreateTime() {
+        return liveCreateTime;
+    }
+
+    public double getAverageFps() {
+        return avrFps;
     }
 
     public void joinIrc() {

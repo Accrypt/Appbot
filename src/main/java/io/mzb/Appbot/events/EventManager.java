@@ -45,6 +45,7 @@ public class EventManager {
                         method.invoke(listener, event);
                     } catch (IllegalAccessException | InvocationTargetException e) {
                         e.printStackTrace();
+                        continue;
                     }
                 }
             }

@@ -102,7 +102,7 @@ public class User {
     private void loadData(Runnable loadCallback) {
         Appbot.getTaskManager().runTask(() -> {
             System.out.println("Loading user data for " + getName() + " in " + channel);
-            JSONObject user = TwitchAPI.USER.get(name);
+            JSONObject user = TwitchAPI.USER.get(getName());
 
             if (user != null) {
                 if (!user.containsKey("error")) {

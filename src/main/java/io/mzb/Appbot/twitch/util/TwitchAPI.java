@@ -6,7 +6,8 @@ public enum TwitchAPI {
 
     CHANNEL("https://api.twitch.tv/kraken/channels/%s"),
     FOLLOWS("https://api.twitch.tv/kraken/channels/%s/follows"),
-    USER("https://api.twitch.tv/kraken/users/%s");
+    USER("https://api.twitch.tv/kraken/users/%s"),
+    STREAM("https://api.twitch.tv/kraken/streams/%s");
 
     private String directory;
 
