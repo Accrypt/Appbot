@@ -38,16 +38,16 @@ public class Channel {
      */
     public Channel(String name) {
         this.name = name;
-        load(null);
         channelKeep.put(name.toLowerCase(), this);
+        load(null);
 
         enableUpdateTask();
     }
 
     public Channel(String name, Runnable loadCallback) {
         this.name = name;
-        load(loadCallback);
         channelKeep.put(name.toLowerCase(), this);
+        load(loadCallback);
 
         enableUpdateTask();
     }
@@ -66,7 +66,14 @@ public class Channel {
 
     public static Channel getFirstChannel() {
         if(channelKeep.keySet().size() > 0) {
-            return channelKeep.get(0);
+            Channel chan = null;
+            for(String k : channelKeep.keySet()) {
+                if(channelKeep.get(k) != null) {
+                    chan = channelKeep.get(k);
+                    break;
+                }
+            }
+            return chan;
         } else {
             System.out.println("Error?! No channels found in the channel keep!");
             return null;
@@ -102,6 +109,8 @@ public class Channel {
 
                 JSONObject followJson = TwitchAPI.FOLLOWS.get(name);
                 this.followers = Integer.valueOf(jsonGet(followJson, "_total"));
+
+                updateStreamInfo();
             }
 
             loaded = true;
@@ -154,27 +163,32 @@ public class Channel {
             }
             */
 
-            JSONObject stream = TwitchAPI.STREAM.get(getName());
-            if(stream == null || stream.get("stream") == null) {
-                online = false;
-                liveCreateTime = null;
-                viewers = 0;
-                avrFps = 0.0D;
-                delay = 0;
-                videoHeight = 0;
-                return;
-            } else {
-                JSONObject streamInfo = (JSONObject) stream.get("stream");
-                game = streamInfo.get("game").toString();
-                viewers = Integer.parseInt(streamInfo.get("viewers").toString());
-                avrFps = Double.parseDouble(streamInfo.get("average_fps").toString());
-                delay = Integer.parseInt(streamInfo.get("delay").toString());
-                videoHeight = Integer.parseInt(streamInfo.get("video_height").toString());
-                playlist = Boolean.parseBoolean(streamInfo.get("is_playlist").toString());
-                liveCreateTime = streamInfo.get("created_at").toString();
-            }
+            updateStreamInfo();
 
         }, 0, 1000 * 20);
+    }
+
+    private void updateStreamInfo() {
+        JSONObject stream = TwitchAPI.STREAM.get(getName());
+        if(stream == null || stream.get("stream") == null) {
+            online = false;
+            liveCreateTime = null;
+            viewers = 0;
+            avrFps = 0.0D;
+            delay = 0;
+            videoHeight = 0;
+            return;
+        } else {
+            JSONObject streamInfo = (JSONObject) stream.get("stream");
+            online = true;
+            game = streamInfo.get("game").toString();
+            viewers = Integer.parseInt(streamInfo.get("viewers").toString());
+            avrFps = Double.parseDouble(streamInfo.get("average_fps").toString());
+            delay = Integer.parseInt(streamInfo.get("delay").toString());
+            videoHeight = Integer.parseInt(streamInfo.get("video_height").toString());
+            playlist = Boolean.parseBoolean(streamInfo.get("is_playlist").toString());
+            liveCreateTime = streamInfo.get("created_at").toString();
+        }
     }
 
     private ArrayList<String> updateLocal(JSONArray names, LocalRank rank) {

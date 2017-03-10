@@ -429,18 +429,18 @@ class IrcIn {
             if(tag.startsWith("user-id=")) {
                 userId = Long.parseLong(tag.substring(8, tag.length()));
             }
-            final int finalColor = color;
-            final long finalUserId = userId;
-            final String finalEmotes = emotes;
-            User user = new User(name);
-            user.reload(() -> {
-                user.setBadges(badges);
-                user.setColor(finalColor);
-                user.setUserId(finalUserId);
-                WhisperEvent event = new WhisperEvent(user, msg, finalEmotes);
-                Appbot.getEventManager().callEvent(event);
-            });
         }
+        final int finalColor = color;
+        final long finalUserId = userId;
+        final String finalEmotes = emotes;
+        User user = new User(name);
+        user.reload(() -> {
+            user.setBadges(badges);
+            user.setColor(finalColor);
+            user.setUserId(finalUserId);
+            WhisperEvent event = new WhisperEvent(user, msg, finalEmotes);
+            Appbot.getEventManager().callEvent(event);
+        });
     }
 
     /**

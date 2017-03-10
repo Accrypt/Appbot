@@ -11,6 +11,7 @@ public class EventManager {
 
     /**
      * Adds a new event listener
+     *
      * @param listener The event listener to be registered
      */
     public void addListener(EventListener listener) {
@@ -20,6 +21,7 @@ public class EventManager {
 
     /**
      * Removes an event listener
+     *
      * @param listener The event listener to be removed
      */
     public void removeListener(EventListener listener) {
@@ -28,6 +30,7 @@ public class EventManager {
 
     /**
      * Calls an event of that type
+     *
      * @param event The event to be called
      */
     public void callEvent(Event event) {
@@ -39,13 +42,16 @@ public class EventManager {
             for (Method method : listener.getClass().getMethods()) {
                 // Check if the event annotation is present
                 if (method.isAnnotationPresent(EventHandler.class)) {
-                    try {
-                        // Try and call that event listener with the event provided
-                        System.out.println("[Event] Invoke: " + method.getName() + " in " + listener.getClass().getSimpleName());
-                        method.invoke(listener, event);
-                    } catch (IllegalAccessException | InvocationTargetException e) {
-                        e.printStackTrace();
-                        continue;
+                    String callingEvent = event.getClass().toString();
+                    String gettingEvent = method.getParameterTypes()[0].toString();
+                    if (callingEvent.equals(gettingEvent)) {
+                        try {
+                            // Try and call that event listener with the event provided
+                            System.out.println("        [Event] Invoke: " + method.getName() + " in " + listener.getClass().getSimpleName());
+                            method.invoke(listener, event);
+                        } catch (IllegalAccessException | InvocationTargetException e) {
+                            continue;
+                        }
                     }
                 }
             }

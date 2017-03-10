@@ -9,13 +9,11 @@ import java.util.HashMap;
 
 public class IRCHandler {
 
-    // Holds messages in a queue so they don't send too quickly and get the bot banned
-    private HashMap<String, ArrayList<String>> sendQueue;
-
     // Twitch connection info
     private static final String SERVER = "irc.twitch.tv";
     private static final int PORT = 6667;
-
+    // Holds messages in a queue so they don't send too quickly and get the bot banned
+    private HashMap<String, ArrayList<String>> sendQueue;
     // Handles input from twitch
     private IrcIn in;
     // Handles output from twitch
@@ -60,7 +58,7 @@ public class IRCHandler {
                 e.printStackTrace();
             }
         });
-        // Starts a looping thread, repeats every 1.5 seconds to avoid gettings banned
+        // Starts a looping thread, repeats every 1.5 seconds to avoid getting banned
         Appbot.getTaskManager().runTask(() -> {
             if(sendQueue.size() > 0) {
                 for(String key : sendQueue.keySet()) {

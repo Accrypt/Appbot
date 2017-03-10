@@ -158,15 +158,15 @@ public class User {
         this.localRank = localRank;
     }
 
-    public void setGlobalRanks(ArrayList<GlobalRank> ranks) {
-        this.globalRanks = ranks;
-    }
-
     /**
      * @return List of all global ranks the user has (Staff, Turbo, etc.)
      */
     public ArrayList<GlobalRank> getGlobalRanks() {
         return globalRanks;
+    }
+
+    public void setGlobalRanks(ArrayList<GlobalRank> ranks) {
+        this.globalRanks = ranks;
     }
 
     /**
@@ -219,17 +219,17 @@ public class User {
     }
 
     /**
-     * Sets the users badges, shouldn't be called by plugins
-     */
-    public void setBadges(ArrayList<Badges> badges) {
-        this.badges = badges;
-    }
-
-    /**
      * @return List of badges the user has in the channel, does not reflect rank
      */
     public ArrayList<Badges> getBadges() {
         return badges;
+    }
+
+    /**
+     * Sets the users badges, shouldn't be called by plugins
+     */
+    public void setBadges(ArrayList<Badges> badges) {
+        this.badges = badges;
     }
 
     /**
@@ -293,7 +293,12 @@ public class User {
     }
 
     public void sendWhisper(String msg) {
-        Channel.getFirstChannel().chat(".w " + getName() + " " + msg);
+        Appbot.getTaskManager().runTask(() -> {
+            Channel channel = Channel.getFirstChannel();
+            System.out.println("First Channel: " + channel.getName());
+            String nom = getName();
+            channel.chat(".w " + nom + " " + msg);
+        });
     }
 
 
