@@ -1,7 +1,7 @@
 # Appbot
 
 ## Settings.json
-```json```
+```json
 {
 	"auth": {
 		"username": "your_bot_username",
@@ -31,13 +31,13 @@ Make sure this imports, it should require you add 2 methods: `onLoad()` and `onU
 In the `onLoad()` method you can add your events and commands:
 
 To add a command, include this in the onload method
-```java```
+```java
 public void onLoad() {
 	getCommandManager().registerCommand(this, "your_command_name", new MyCommand());
 }
 ```
 Then, in your `MyCommand` class impliment `CommandHandler`
-```java```
+```java
 public class MyCommand inpliments CommandHandler {
 
 	public void onCommand(Channel channel, User user, String command, String[] args) {
